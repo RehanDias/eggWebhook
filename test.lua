@@ -3,18 +3,18 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Request handler
+-- HTTP request support
 local request = http_request or request or nil
 
--- Konfigurasi Webhook
+-- Webhook URL 
 local webhookURL = ""
 
 -- Global toggle
 getgenv().logHatchEnabled = false
 
-print("✅ Hatch Logger Aktif!")
+print("✨ Hatch Logger Aktif!")
 
--- Peta Pet ke Nama Egg
+-- Mapping nama pet ke nama egg
 local petToEggMap = {
 	["Dog"] = "Common Egg", ["Golden Lab"] = "Common Egg", ["Bunny"] = "Common Egg",
 	["Black Bunny"] = "Uncommon Egg", ["Chicken"] = "Uncommon Egg", ["Cat"] = "Uncommon Egg", ["Deer"] = "Uncommon Egg",
@@ -26,13 +26,28 @@ local petToEggMap = {
 	["Hedgehog"] = "Night Egg", ["Mole"] = "Night Egg", ["Frog"] = "Night Egg", ["Echo Frog"] = "Night Egg", ["Night Owl"] = "Night Egg", ["Raccoon"] = "Night Egg"
 }
 
--- Fungsi untuk mengirim hatch log ke Discord
+-- Kirim embed ke Discord
 local function sendToDiscord(petName)
 	if not getgenv().logHatchEnabled then return end
 
 	local eggName = petToEggMap[petName] or "❓ Unknown Egg"
-	local content = string.format("**[🐣 Hatch Info]**\n📦 Egg: `%s`\n🐶 Pet: `%s`", eggName, petName)
-	print("📤 Mengirim ke Webhook:", content)
+
+	local embed = {
+		title = "🐣 Pet Hatched!",
+		description = string.format("**Egg:** `%s`\n**Pet:** `%s`", eggName, petName),
+		color = 0x7289DA, -- Discord blurple
+		footer = {
+			text = "Arcanist Webhook | Hatch Logger"
+		},
+		timestamp = DateTime.now():ToIsoDate()
+	}
+
+	local payload = {
+		username = "Arcanist Webhook",
+		embeds = { embed }
+	}
+
+	print("📤 Mengirim embed:", petName)
 
 	if request then
 		pcall(function()
@@ -40,15 +55,15 @@ local function sendToDiscord(petName)
 				Url = webhookURL,
 				Method = "POST",
 				Headers = { ["Content-Type"] = "application/json" },
-				Body = HttpService:JSONEncode({ content = content })
+				Body = HttpService:JSONEncode(payload)
 			})
 		end)
 	else
-		warn("❌ request() tidak tersedia di executor ini.")
+		warn("❌ Executor tidak support 'request()'")
 	end
 end
 
--- Hook FireServer: Deteksi Hatch Event
+-- Hook FireServer untuk deteksi Hatch
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
 	local args = { ... }
@@ -67,7 +82,7 @@ oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
 	return oldNamecall(self, ...)
 end))
 
--- GUI Toggle Logger
+-- GUI Toggle
 pcall(function()
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "HatchLoggerGUI"
