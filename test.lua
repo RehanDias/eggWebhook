@@ -77,7 +77,7 @@ oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
 	return oldNamecall(self, ...)
 end))
 
--- GUI Toggle (Hitam & Ringan)
+-- GUI Toggle
 pcall(function()
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "HatchLoggerGUI"
