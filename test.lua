@@ -1,17 +1,15 @@
--- Services
+--🔧 Services
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- HTTP support
+--🔗 Webhook Config
 local request = http_request or request or nil
-local webhookURL = ""
-
--- Global toggle
+local webhookURL = "" 
 getgenv().logHatchEnabled = false
-print("✨ Hatch Logger Siap!")
+print("✅ Hatch Logger siap digunakan!")
 
--- Map Pet ke Egg
+--📦 Pet → Egg Mapping
 local petToEggMap = {
 	["Dog"] = "Common Egg", ["Golden Lab"] = "Common Egg", ["Bunny"] = "Common Egg",
 	["Black Bunny"] = "Uncommon Egg", ["Chicken"] = "Uncommon Egg", ["Cat"] = "Uncommon Egg", ["Deer"] = "Uncommon Egg",
@@ -23,15 +21,17 @@ local petToEggMap = {
 	["Hedgehog"] = "Night Egg", ["Mole"] = "Night Egg", ["Frog"] = "Night Egg", ["Echo Frog"] = "Night Egg", ["Night Owl"] = "Night Egg", ["Raccoon"] = "Night Egg"
 }
 
--- Kirim ke Discord
+--📨 Kirim Embed ke Discord
 local function sendToDiscord(petName)
 	if not getgenv().logHatchEnabled then return end
+
 	local eggName = petToEggMap[petName] or "❓ Unknown Egg"
+	print("📤 Mengirim data:", petName)
 
 	local embed = {
-		title = "🐣 Pet Hatched!",
-		description = string.format("**Egg:** `%s`\n**Pet:** `%s`", eggName, petName),
-		color = tonumber("0x7289DA"),
+		title = "🎉 Pet Telah Ditetaskan!",
+		description = string.format("🐣 **Egg:** `%s`\n✨ **Pet:** `%s`", eggName, petName),
+		color = tonumber("0x00FFFF"),
 		footer = { text = "Arcanist Webhook | Hatch Logger" },
 		timestamp = DateTime.now():ToIsoDate()
 	}
@@ -40,8 +40,6 @@ local function sendToDiscord(petName)
 		username = "Arcanist Webhook",
 		embeds = { embed }
 	}
-
-	print("📤 Kirim:", petName)
 
 	if request then
 		pcall(function()
@@ -53,23 +51,23 @@ local function sendToDiscord(petName)
 			})
 		end)
 	else
-		warn("❌ Executor tidak mendukung 'request()'")
+		warn("❌ Tidak ada fungsi request() pada executor.")
 	end
 end
 
--- Hook FireServer
+--🧠 Hook __namecall untuk deteksi
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
 	local args = { ... }
 	local method = getnamecallmethod()
 
 	if method == "FireServer" then
-		local selfName = tostring(self)
-		if selfName == "PetEggService" and args[1] == "HatchPet" then
-			print("🥚 HatchPet Terdeteksi")
-		elseif selfName == "ReplicationChannel" and args[1] == "PetAssets" then
+		local remote = tostring(self)
+		if remote == "PetEggService" and args[1] == "HatchPet" then
+			print("🥚 Deteksi hatch pet!")
+		elseif remote == "ReplicationChannel" and args[1] == "PetAssets" then
 			local petName = tostring(args[2])
-			print("🎉 Pet didapat:", petName)
+			print("✅ Pet berhasil didapat:", petName)
 			sendToDiscord(petName)
 		end
 	end
@@ -77,38 +75,37 @@ oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
 	return oldNamecall(self, ...)
 end))
 
--- GUI Toggle
+--🖥️ GUI Toggle
 pcall(function()
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "HatchLoggerGUI"
 	gui.ResetOnSpawn = false
 	gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
-	local toggleFrame = Instance.new("Frame")
-	toggleFrame.Name = "ToggleFrame"
-	toggleFrame.Parent = gui
-	toggleFrame.Size = UDim2.new(0, 120, 0, 28)
-	toggleFrame.Position = UDim2.new(0, 20, 0, 100)
-	toggleFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-	toggleFrame.BorderSizePixel = 1
-	toggleFrame.Active = true
-	toggleFrame.Draggable = true
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0, 140, 0, 30)
+	frame.Position = UDim2.new(0, 20, 0, 100)
+	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	frame.BorderSizePixel = 1
+	frame.Active = true
+	frame.Draggable = true
+	frame.Parent = gui
 
 	local label = Instance.new("TextLabel")
-	label.Name = "ToggleLabel"
-	label.Parent = toggleFrame
 	label.Size = UDim2.new(1, 0, 1, 0)
 	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.SourceSans
+	label.Font = Enum.Font.GothamBold
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.TextSize = 14
 	label.Text = "[OFF] Hatch Logger"
+	label.Parent = frame
 
-	toggleFrame.InputBegan:Connect(function(input)
+	frame.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			getgenv().logHatchEnabled = not getgenv().logHatchEnabled
-			label.Text = getgenv().logHatchEnabled and "[ON] Hatch Logger" or "[OFF] Hatch Logger"
-			print(getgenv().logHatchEnabled and "✅ Logger AKTIF" or "🛑 Logger NONAKTIF")
+			local state = getgenv().logHatchEnabled and "[ON] Hatch Logger" or "[OFF] Hatch Logger"
+			label.Text = state
+			print(getgenv().logHatchEnabled and "🟢 Logger Aktif" or "🔴 Logger Nonaktif")
 		end
 	end)
 end)
