@@ -76,6 +76,7 @@ oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
 end))
 
 --🖥️ GUI Toggle
+--🖥️ GUI Toggle (Diperbaiki)
 pcall(function()
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "HatchLoggerGUI"
@@ -83,29 +84,34 @@ pcall(function()
 	gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0, 140, 0, 30)
+	frame.Size = UDim2.new(0, 160, 0, 40)
 	frame.Position = UDim2.new(0, 20, 0, 100)
 	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	frame.BorderSizePixel = 1
+	frame.BorderSizePixel = 0
 	frame.Active = true
 	frame.Draggable = true
 	frame.Parent = gui
 
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamBold
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.TextSize = 14
-	label.Text = "[OFF] Hatch Logger"
-	label.Parent = frame
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, 0, 1, 0)
+	button.BackgroundTransparency = 1
+	button.Font = Enum.Font.GothamBold
+	button.TextColor3 = Color3.new(1, 1, 1)
+	button.TextSize = 14
+	button.Text = "[OFF] Hatch Logger"
+	button.AutoButtonColor = false
+	button.Parent = frame
 
-	frame.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			getgenv().logHatchEnabled = not getgenv().logHatchEnabled
-			local state = getgenv().logHatchEnabled and "[ON] Hatch Logger" or "[OFF] Hatch Logger"
-			label.Text = state
-			print(getgenv().logHatchEnabled and "🟢 Logger Aktif" or "🔴 Logger Nonaktif")
-		end
+	local function updateState()
+		local state = getgenv().logHatchEnabled
+		button.Text = state and "[ON] Hatch Logger" or "[OFF] Hatch Logger"
+		print(state and "🟢 Logger Aktif" or "🔴 Logger Nonaktif")
+	end
+
+	button.MouseButton1Click:Connect(function()
+		getgenv().logHatchEnabled = not getgenv().logHatchEnabled
+		updateState()
 	end)
+
+	updateState()
 end)
